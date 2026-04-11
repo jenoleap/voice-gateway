@@ -7,21 +7,22 @@ Separate from `wa-sales-gateway`. Bridges the **React Native app** ↔ **Gemini 
 ```bash
 cd voice-gateway
 cp .env.example .env
-# Set GEMINI_API_KEY (Google AI Studio). Optional: SUPABASE_URL + SUPABASE_ANON_KEY to require ?token=...
+# Set GEMINI_API_KEY, GEMINI_LIVE_MODEL, and PORT (e.g. PORT=8791). Optional: SUPABASE_URL + SUPABASE_ANON_KEY to require ?token=...
 npm install
 npm run dev
 ```
 
-- HTTP health: `http://localhost:8791/`
-- App WebSocket path: `ws://<host>:8791/voice?token=<supabase_access_token>`
+- HTTP health: `http://localhost:<PORT>/` (same HTTP server; Railway injects `PORT`)
+- App WebSocket: `WebSocketServer` is mounted at **`/voice`** only (proper HTTP **101** Switching Protocols). Example: `ws://<host>:<PORT>/voice?token=<supabase_access_token>`
+- The process binds to **`0.0.0.0`** so platform proxies (e.g. Railway) can reach it.
 
 ## Environment
 
 | Variable | Required | Notes |
 |----------|----------|--------|
-| `GEMINI_API_KEY` | Yes | Server-side only |
-| `GEMINI_LIVE_MODEL` | No | Default in `src/index.ts`; update if Google renames preview models |
-| `PORT` | No | Default `8791` |
+| `GEMINI_API_KEY` | Yes | Server-side only; process exits at startup if missing |
+| `GEMINI_LIVE_MODEL` | Yes | Live model id (no `models/` prefix); process exits at startup if missing |
+| `PORT` | Yes | `parseInt(process.env.PORT, 10)` — Railway sets this; use `8791` (or any free port) in `.env` locally |
 | `SUPABASE_URL` + `SUPABASE_ANON_KEY` | No | If both set, connections **must** pass a valid user JWT in `token` |
 
 ## Protocol

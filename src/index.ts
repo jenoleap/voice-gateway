@@ -1,10 +1,40 @@
 import 'dotenv/config';
+import pino from 'pino';
 import { createVoiceGatewayServer } from './server.js';
 
-const PORT = Number(process.env.PORT ?? 8791);
+const bootstrapLog = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+
+process.on('uncaughtException', (err) => {
+  bootstrapLog.fatal({ err }, 'uncaughtException');
+});
+process.on('unhandledRejection', (reason, promise) => {
+  bootstrapLog.fatal({ reason, promise: String(promise) }, 'unhandledRejection');
+});
+
+const portRaw = process.env.PORT;
+const portTrimmed = portRaw !== undefined && portRaw !== null ? String(portRaw).trim() : '';
+const PORT = portTrimmed === '' ? 8791 : parseInt(portTrimmed, 10);
+if (!Number.isFinite(PORT) || PORT < 1 || PORT > 65535) {
+  throw new Error(`Invalid PORT "${portTrimmed || portRaw}": must be an integer 1–65535.`);
+}
+if (portTrimmed === '') {
+  bootstrapLog.info(
+    { port: PORT },
+    'PORT not set; using default 8791 for local dev (Railway injects PORT in production).'
+  );
+}
+
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? '';
-const GEMINI_LIVE_MODEL =
-  process.env.GEMINI_LIVE_MODEL?.trim() || 'gemini-2.5-flash-native-audio-preview-12-2025';
+if (!GEMINI_API_KEY) {
+  throw new Error('GEMINI_API_KEY is required (Google AI Studio API key, server-side only).');
+}
+
+const GEMINI_LIVE_MODEL = process.env.GEMINI_LIVE_MODEL?.trim() ?? '';
+if (!GEMINI_LIVE_MODEL) {
+  throw new Error(
+    'GEMINI_LIVE_MODEL is required (e.g. gemini-2.5-flash-native-audio-preview-12-2025). See Gemini Live API docs.'
+  );
+}
 
 const { server, log, listen } = createVoiceGatewayServer({
   port: PORT,
@@ -17,9 +47,10 @@ const { server, log, listen } = createVoiceGatewayServer({
 
 listen();
 server.on('listening', () => {
-  log.info({ port: PORT }, 'walletx-voice-gateway listening');
+  const addr = server.address();
+  const bind =
+    addr && typeof addr === 'object'
+      ? { host: addr.address, port: addr.port }
+      : { host: '0.0.0.0', port: PORT };
+  log.info(bind, 'walletx-voice-gateway listening');
 });
-
-if (!GEMINI_API_KEY) {
-  log.warn('GEMINI_API_KEY is empty — voice sessions will fail until set (server-side .env only)');
-}

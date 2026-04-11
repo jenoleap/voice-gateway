@@ -11,9 +11,19 @@ export type GeminiLiveUpstreamOptions = {
  * Opens a WebSocket to Gemini Multimodal Live API (Google AI). Send `buildInitialConfigMessage` on `open`.
  * @see https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
  */
+export function startLiveConnection(opts: GeminiLiveUpstreamOptions): WebSocket {
+  try {
+    const url = `wss://generativelanguage.googleapis.com${GEMINI_LIVE_PATH}?key=${encodeURIComponent(opts.apiKey)}`;
+    return new WebSocket(url);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Failed to start Gemini Live WebSocket: ${message}`);
+  }
+}
+
+/** @deprecated Prefer {@link startLiveConnection} */
 export function createGeminiLiveConnection(opts: GeminiLiveUpstreamOptions): WebSocket {
-  const url = `wss://generativelanguage.googleapis.com${GEMINI_LIVE_PATH}?key=${encodeURIComponent(opts.apiKey)}`;
-  return new WebSocket(url);
+  return startLiveConnection(opts);
 }
 
 export function buildInitialConfigMessage(opts: {
