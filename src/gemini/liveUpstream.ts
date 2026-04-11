@@ -31,11 +31,16 @@ export function buildInitialConfigMessage(opts: {
   systemInstructionText: string;
 }): string {
   const model = opts.modelId.startsWith('models/') ? opts.modelId : `models/${opts.modelId}`;
-  /** @see https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket */
+  /**
+   * First client frame must be `setup` (BidiGenerateContentSetup), not `config`.
+   * @see https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
+   */
   const message = {
-    config: {
+    setup: {
       model,
-      responseModalities: ['AUDIO'],
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+      },
       systemInstruction: {
         parts: [{ text: opts.systemInstructionText }],
       },
