@@ -32,7 +32,7 @@ npm run dev
 ## Protocol
 
 See `src/protocol/wire.ts`. The app sends `session.meta`, `realtimeInput` (16 kHz PCM base64 per [Live API](https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket)), and receives `gateway.ready`, `gemini` envelopes, and errors.  
-Gateway upstream uses the **v1alpha** BidiGenerateContent WebSocket path and sends `setup.generationConfig.speechConfig` with your configured voice.
+Gateway upstream uses the **v1beta** BidiGenerateContent WebSocket path (`wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BiDiGenerateContent`) and sends `setup.generationConfig.speechConfig` with your configured voice.
 
 ## Production
 
