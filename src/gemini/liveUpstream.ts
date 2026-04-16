@@ -13,7 +13,14 @@ export type GeminiLiveUpstreamOptions = {
  */
 export function startLiveConnection(opts: GeminiLiveUpstreamOptions): WebSocket {
   try {
-    const url = `wss://generativelanguage.googleapis.com${GEMINI_LIVE_PATH}?key=${encodeURIComponent(opts.apiKey)}`;
+    const key = opts.apiKey;
+    const url = `wss://generativelanguage.googleapis.com${GEMINI_LIVE_PATH}?key=${encodeURIComponent(key)}`;
+    // Log only a short prefix of the key for debugging; never log the full secret.
+    // This helps confirm that GOOGLE_API_KEY is wired correctly in hosted environments.
+    console.log('[voice-gateway] Connecting to Gemini Live', {
+      url,
+      keyPrefix: key ? key.slice(0, 4) : '',
+    });
     return new WebSocket(url);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
