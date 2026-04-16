@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 
 const GEMINI_LIVE_PATH =
-  '/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent';
+  '/ws/google.ai.generativelanguage.v1beta.GenerativeService.BiDiGenerateContent';
 
 export type GeminiLiveUpstreamOptions = {
   apiKey: string;
