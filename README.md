@@ -7,7 +7,9 @@ Separate from `wa-sales-gateway`. Bridges the **React Native app** ↔ **Gemini 
 ```bash
 cd voice-gateway
 cp .env.example .env
-# Set GEMINI_API_KEY, GEMINI_LIVE_MODEL, and PORT (e.g. PORT=8791). Optional: SUPABASE_URL + SUPABASE_ANON_KEY to require ?token=...
+# Set GEMINI_API_KEY, GEMINI_LIVE_MODEL, and PORT (e.g. PORT=8791).
+# Optional: GEMINI_LIVE_VOICE (Kore/Zephyr/Aoide), GEMINI_LIVE_FALLBACK_VOICE (e.g. Aoide),
+# and SUPABASE_URL + SUPABASE_ANON_KEY to require ?token=...
 npm install
 npm run dev
 ```
@@ -22,12 +24,15 @@ npm run dev
 |----------|----------|--------|
 | `GEMINI_API_KEY` | Yes | Server-side only; process exits at startup if missing |
 | `GEMINI_LIVE_MODEL` | Yes | Live model id (no `models/` prefix); process exits at startup if missing |
+| `GEMINI_LIVE_VOICE` | No | Primary voice name for `speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName` (default: `Kore`) |
+| `GEMINI_LIVE_FALLBACK_VOICE` | No | Fallback voice on setup failure (default: `Aoide`) |
 | `PORT` | Yes | `parseInt(process.env.PORT, 10)` — Railway sets this; use `8791` (or any free port) in `.env` locally |
 | `SUPABASE_URL` + `SUPABASE_ANON_KEY` | No | If both set, connections **must** pass a valid user JWT in `token` |
 
 ## Protocol
 
-See `src/protocol/wire.ts`. The app sends `session.meta`, `realtimeInput` (16 kHz PCM base64 per [Live API](https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket)), and receives `gateway.ready`, `gemini` envelopes, and errors.
+See `src/protocol/wire.ts`. The app sends `session.meta`, `realtimeInput` (16 kHz PCM base64 per [Live API](https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket)), and receives `gateway.ready`, `gemini` envelopes, and errors.  
+Gateway upstream uses the **v1alpha** BidiGenerateContent WebSocket path and sends `setup.generationConfig.speechConfig` with your configured voice.
 
 ## Production
 

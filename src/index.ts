@@ -32,14 +32,18 @@ if (!GEMINI_API_KEY) {
 const GEMINI_LIVE_MODEL = process.env.GEMINI_LIVE_MODEL?.trim() ?? '';
 if (!GEMINI_LIVE_MODEL) {
   throw new Error(
-    'GEMINI_LIVE_MODEL is required (e.g. gemini-2.5-flash-native-audio-preview-12-2025). See Gemini Live API docs.'
+    'GEMINI_LIVE_MODEL is required (e.g. gemini-3.1-flash-live-preview). See Gemini Live API docs.'
   );
 }
+const GEMINI_LIVE_VOICE = process.env.GEMINI_LIVE_VOICE?.trim() || 'Kore';
+const GEMINI_LIVE_FALLBACK_VOICE = process.env.GEMINI_LIVE_FALLBACK_VOICE?.trim() || 'Aoide';
 
 const { server, log, listen } = createVoiceGatewayServer({
   port: PORT,
   geminiApiKey: GEMINI_API_KEY,
   geminiLiveModel: GEMINI_LIVE_MODEL,
+  geminiLiveVoice: GEMINI_LIVE_VOICE,
+  geminiLiveFallbackVoice: GEMINI_LIVE_FALLBACK_VOICE,
   supabaseUrl: process.env.SUPABASE_URL?.trim() ?? '',
   supabaseAnonKey: process.env.SUPABASE_ANON_KEY?.trim() ?? '',
   logLevel: process.env.LOG_LEVEL ?? 'info',

@@ -15,6 +15,8 @@ export type VoiceGatewayEnv = {
   port: number;
   geminiApiKey: string;
   geminiLiveModel: string;
+  geminiLiveVoice: string;
+  geminiLiveFallbackVoice: string;
   supabaseUrl: string;
   supabaseAnonKey: string;
   logLevel: string;
@@ -107,6 +109,15 @@ async function handleVoiceConnection(
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
   let configSent = false;
   const pendingOutbound: string[] = [];
+  const voiceCandidates = Array.from(
+    new Set(
+      [env.geminiLiveVoice, env.geminiLiveFallbackVoice]
+        .map((v) => v.trim())
+        .filter((v) => v.length > 0)
+    )
+  );
+  let currentVoice = voiceCandidates[0] ?? 'Kore';
+  let voiceAttemptIndex = 0;
 
   const cleanup = (reason: string) => {
     if (debounceTimer) {
@@ -154,12 +165,14 @@ async function handleVoiceConnection(
     }
 
     upstream = u;
+    const setupVoice = currentVoice;
 
     u.on('open', () => {
       try {
         const setupPayload = buildInitialConfigMessage({
           modelId: env.geminiLiveModel,
           systemInstructionText: buildSystemText(),
+          voiceName: setupVoice,
         });
         u.send(setupPayload);
         configSent = true;
@@ -167,8 +180,9 @@ async function handleVoiceConnection(
           type: 'gateway.ready',
           model: env.geminiLiveModel,
           responseModalities: ['AUDIO'],
+          voice: setupVoice,
         });
-        log.info('gemini upstream open, config sent');
+        log.info({ voice: setupVoice }, 'gemini upstream open, config sent');
         while (pendingOutbound.length > 0 && u.readyState === u.OPEN) {
           const line = pendingOutbound.shift();
           if (line) u.send(line);
@@ -186,6 +200,19 @@ async function handleVoiceConnection(
 
     u.on('error', (err) => {
       log.error({ err }, 'gemini upstream error');
+      if (!configSent && voiceAttemptIndex + 1 < voiceCandidates.length) {
+        voiceAttemptIndex += 1;
+        currentVoice = voiceCandidates[voiceAttemptIndex]!;
+        log.warn({ nextVoice: currentVoice }, 'retrying gemini upstream with fallback voice');
+        try {
+          u.close();
+        } catch {
+          /* ignore */
+        }
+        upstream = null;
+        openUpstream();
+        return;
+      }
       sendToClient({
         type: 'gateway.error',
         code: 'upstream_error',
@@ -223,7 +250,25 @@ async function handleVoiceConnection(
         }
         return;
       }
+      if (!configSent && voiceAttemptIndex + 1 < voiceCandidates.length) {
+        voiceAttemptIndex += 1;
+        currentVoice = voiceCandidates[voiceAttemptIndex]!;
+        log.warn({ code, reason: reasonStr, nextVoice: currentVoice }, 'retrying with fallback voice after abnormal close');
+        try {
+          u.close();
+        } catch {
+          /* ignore */
+        }
+        upstream = null;
+        openUpstream();
+        return;
+      }
       log.warn({ code, reason: reasonStr }, 'gemini upstream closed abnormally');
+      sendToClient({
+        type: 'gateway.error',
+        code: 'upstream_abnormal',
+        message: `Gemini upstream closed: code=${code}${reasonStr ? ` reason=${reasonStr}` : ''}`,
+      });
       safeCloseClient(clientWs, 1011, 'upstream_abnormal');
     });
   }

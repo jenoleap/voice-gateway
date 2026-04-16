@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 
 const GEMINI_LIVE_PATH =
-  '/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
+  '/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent';
 
 export type GeminiLiveUpstreamOptions = {
   apiKey: string;
@@ -29,8 +29,10 @@ export function createGeminiLiveConnection(opts: GeminiLiveUpstreamOptions): Web
 export function buildInitialConfigMessage(opts: {
   modelId: string;
   systemInstructionText: string;
+  voiceName?: string;
 }): string {
   const model = opts.modelId.startsWith('models/') ? opts.modelId : `models/${opts.modelId}`;
+  const selectedVoice = (opts.voiceName || 'Kore').trim() || 'Kore';
   /**
    * First client frame must be `setup` (BidiGenerateContentSetup), not `config`.
    * @see https://ai.google.dev/gemini-api/docs/live-api/get-started-websocket
@@ -40,6 +42,13 @@ export function buildInitialConfigMessage(opts: {
       model,
       generationConfig: {
         responseModalities: ['AUDIO'],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: {
+              voiceName: selectedVoice,
+            },
+          },
+        },
       },
       systemInstruction: {
         parts: [{ text: opts.systemInstructionText }],
