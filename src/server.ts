@@ -242,7 +242,8 @@ async function handleVoiceConnection(
   function scheduleDebouncedOpen() {
     if (upstream || configSent) return;
     if (debounceTimer) clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => openUpstream(), 350);
+    // Keep warm-up snappy; long debounce delays first token/audio.
+    debounceTimer = setTimeout(() => openUpstream(), 50);
   }
 
   scheduleDebouncedOpen();

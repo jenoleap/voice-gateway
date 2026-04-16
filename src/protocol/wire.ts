@@ -28,6 +28,9 @@ export type GeminiClientRealtimePayload = {
     text?: string;
     audio?: { data: string; mimeType: string };
     video?: { data: string; mimeType: string };
+    audioStreamEnd?: boolean;
+    activityStart?: Record<string, never>;
+    activityEnd?: Record<string, never>;
   };
   clientContent?: unknown;
 };
