@@ -24,9 +24,12 @@ if (portTrimmed === '') {
   );
 }
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? '';
+const GEMINI_API_KEY =
+  process.env.GOOGLE_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim() || '';
 if (!GEMINI_API_KEY) {
-  throw new Error('GEMINI_API_KEY is required (Google AI Studio API key, server-side only).');
+  throw new Error(
+    'GOOGLE_API_KEY (or GEMINI_API_KEY) is required (Google AI Studio / Gemini API key, server-side only).'
+  );
 }
 
 const GEMINI_LIVE_MODEL = process.env.GEMINI_LIVE_MODEL?.trim() ?? '';

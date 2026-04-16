@@ -22,7 +22,7 @@ npm run dev
 
 | Variable | Required | Notes |
 |----------|----------|--------|
-| `GEMINI_API_KEY` | Yes | Server-side only; process exits at startup if missing |
+| `GOOGLE_API_KEY` / `GEMINI_API_KEY` | Yes | Server-side only; gateway prefers `GOOGLE_API_KEY` and falls back to `GEMINI_API_KEY` if unset |
 | `GEMINI_LIVE_MODEL` | Yes | Live model id (no `models/` prefix); process exits at startup if missing |
 | `GEMINI_LIVE_VOICE` | No | Primary voice name for `speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName` (default: `Kore`) |
 | `GEMINI_LIVE_FALLBACK_VOICE` | No | Fallback voice on setup failure (default: `Aoide`) |
